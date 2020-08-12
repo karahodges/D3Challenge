@@ -1,47 +1,56 @@
 // @TODO: YOUR CODE HERE!
-var margin = {top: 10, right: 30, bottom: 30, left: 60},
-    width = 460 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
+const svgwidth = 960;
+const svgheight = 500;
 
-// append the svg object to the body of the page
+
+// assigns margins for the graph on the page
+var margin = {top: 20,
+  right: 40,
+  bottom: 60,
+  left: 100};
+// set up the height width and margins 
+var width = svgwidth - margin.left - margin.right;
+var height = svgheight - margin.top - margin.bottom;
+
+// sets up the chart into the SVG group and 
 var svg = d3.select("#scatter")
   .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform",
-          "translate(" + margin.left + "," + margin.top + ")");
+  .attr("width", svgwidth)
+  .attr("height", svgheight);
 
-//Read the data
-d3.csv("assests/data/data.csv", function(data) {
+var chartdata = svg.append("g")
+  .attr("transform", `translate(${margin.left}, ${margin.top})`);
+// imports the data 
+d3.csv("assets/data/data.csv").then(function(data) {
+  console.log('works');
+//   runs through the data and maps the data to the label 
+    data.forEach(function(data) {
+      data.poverty = +data.poverty;
+      data.healthcare = +data.healthcare;
+    });
+// set up the x axis 
+    var x = d3.scaleLinear()
+      .domain([8, d3.max(data, d => d.poverty)])
+      .range([0, width]);
+//  set up the y axis 
+    var y = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.healthcare)])
+      .range([height, 0]);
+    var bottom = d3.axisBottom(x);
+    var left = d3.axisLeft(y);
+    // add the axis onto the chart 
+    chartdata.append("g")
+      .attr("transform", `translate(0, ${height})`)
+      .call(bottom);
 
-  // Add X axis
-  var x = d3.scaleLinear()
-    .domain([0, 4000])
-    .range([ 0, width ]);
-  svg.append("g")
-    .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x));
-
-  // Add Y axis
-  var y = d3.scaleLinear()
-    .domain([0, 500000])
-    .range([ height, 0]);
-  svg.append("g")
-    .call(d3.axisLeft(y));
-
-  // Add dots
-  svg.append('g')
-    .attr('transform', `translate(0, ${height})`)
-    .call(axisBottom)
-    .call(axisLeft)
-    .selectAll("dot")
+    chartdata.append("g")
+      .call(left);
+// add the dots onto the graph 
+    var dots = chartdata.selectAll("circle")
     .data(data)
     .enter()
     .append("circle")
-      .attr("x", function (d) { return x(d.poverty); } )
-      .attr("y", function (d) { return y(d.healthcare); } )
-      .style("fill", "#69b3a2")
-
-})
-
+    .attr("cx", d => x(d.poverty))
+    .attr("cy", d => y(d.healthcare))
+    .attr("r", "9");
+  });
